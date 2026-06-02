@@ -29,9 +29,9 @@ router.post('/upload', uploadS3.single('file'), (req, res) => {
     // Menangkap URL otomatis dari file yang sukses terlempar ke AWS S3
     const file_url = req.file.location; 
 
-    // Menyimpan rekam jejak (URL S3, judul, tipe) ke dalam database AWS RDS
-    // Catatan: Sesuaikan nama kolom (judul, tipe, file_url) jika di database kalian berbeda
-    const query = 'INSERT INTO materi_tugas (judul, tipe, file_url) VALUES (?, ?, ?)';
+    // MENYESUAIKAN DENGAN STRUKTUR TABEL DATABASE ANDA:
+    // Kita simpan file_url ke kolom 'file_dokumen' sesuai hasil DESCRIBE tabel
+    const query = 'INSERT INTO materi_tugas (judul, tipe, file_dokumen) VALUES (?, ?, ?)';
     
     db.query(query, [judul, tipe, file_url], (err, results) => {
         if (err) {
@@ -39,9 +39,7 @@ router.post('/upload', uploadS3.single('file'), (req, res) => {
             return res.status(500).send("Gagal menyimpan ke database");
         }
         
-        // BUM! INI DIA KUNCINYA!
-        // Kita alihkan kembali ke halaman utama dengan membawa sinyal '?status=success'
-        // Sinyal ini akan dibaca oleh SweetAlert2 di index.ejs untuk memunculkan animasi!
+        // Mengalihkan kembali ke halaman utama dengan membawa sinyal '?status=success'
         res.redirect('/?status=success');
     });
 });
