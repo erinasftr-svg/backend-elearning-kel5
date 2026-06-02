@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <title>Portal Dosen UPR</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background-color: #f4f7f6; }
+        .container { background: white; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
+        input, select, button { padding: 10px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        button { background-color: #0056b3; color: white; border: none; cursor: pointer; font-weight: bold; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background-color: #0056b3; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2> Portal E-Learning UPR (Dosen)</h2>
+        <p>Kelas: Cloud Computing | Upload Materi & Tugas Baru</p>
+
+        <form action="/upload" method="POST" enctype="multipart/form-data">
+            <input type="text" name="judul" placeholder="Masukkan Judul Materi/Tugas..." required>
+            <select name="tipe">
+                <option value="materi_belajar">Bahan Materi Belajar</option>
+                <option value="tugas_ujian">Tugas / Ujian</option>
+            </select>
+            <input type="file" name="file_dokumen" required>
+            <button type="submit">Simpan & Unggah ke Database</button>
+        </form>
+
+        <hr>
+
+        <h3>📂 Daftar Materi Terunggah</h3>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Judul</th>
+                <th>Tipe</th>
+                <th>Aksi / Unduh</th>
+            </tr>
+            <% data.forEach(item => { %>
+            <tr>
+                <td><%= item.id %></td>
+                <td><%= item.judul %></td>
+                <td><%= item.tipe %></td>
+                <td><a href="<%= item.file_dokumen %>" target="_blank">Lihat Dokumen</a></td>
+            </tr>
+            <% }) %>
+        </table>
+    </div>
+</body>
+</html>
