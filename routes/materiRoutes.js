@@ -20,7 +20,22 @@ router.get('/', (req, res) => {
     });
 });
 
-// 2. Route untuk memproses form Upload (S3 + RDS)
+// 2. Route untuk menampilkan halaman Mahasiswa (BARU)
+router.get('/mahasiswa', (req, res) => {
+    // Mengambil semua data dari tabel materi_tugas di RDS
+    const query = 'SELECT * FROM materi_tugas ORDER BY id DESC';
+    
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Gagal mengambil data dari RDS:", err);
+            return res.status(500).send("Error Database RDS");
+        }
+        // Mengirimkan data ke file mahasiswa.ejs agar bisa ditampilkan
+        res.render('mahasiswa', { materi: results });
+    });
+});
+
+// 3. Route untuk memproses form Upload (S3 + RDS)
 // 'file' di dalam uploadS3.single() adalah 'name' dari input type="file" di HTML
 router.post('/upload', uploadS3.single('file'), (req, res) => {
     // Menangkap data teks dari form (judul dan tipe materi)
@@ -41,6 +56,24 @@ router.post('/upload', uploadS3.single('file'), (req, res) => {
         
         // Mengalihkan kembali ke halaman utama dengan membawa sinyal '?status=success'
         res.redirect('/?status=success');
+    });
+});
+
+// 4. Route DELETE (Menghapus Materi dari Database)
+router.get('/delete/:id', (req, res) => {
+    const idMateri = req.params.id;
+    
+    // Query untuk menghapus baris data berdasarkan ID
+    const query = 'DELETE FROM materi_tugas WHERE id = ?';
+    
+    db.query(query, [idMateri], (err, results) => {
+        if (err) {
+            console.error("Gagal menghapus data:", err);
+            return res.status(500).send("Gagal menghapus data");
+        }
+        
+        // Alihkan kembali ke halaman utama dengan sinyal berhasil dihapus
+        res.redirect('/?status=deleted');
     });
 });
 
