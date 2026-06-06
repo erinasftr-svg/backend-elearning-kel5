@@ -69,10 +69,40 @@
                                             <td><span class="badge bg-info text-dark"><%= item.tipe === 'materi_belajar' ? 'Materi' : 'Tugas' %></span></td>
                                             <td>
                                                 <a href="<%= item.file_dokumen %>" target="_blank" class="btn btn-sm btn-outline-success">Lihat File</a>
-                                                
-                                                <a href="/delete/<%= item.id %>" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Apakah kamu yakin ingin menghapus materi ini?')">Hapus</a>
+                                                <button class="btn btn-sm btn-outline-warning ms-1" data-bs-toggle="modal" data-bs-target="#editModal<%= item.id %>">Edit</button>
+                                                <a href="/delete/<%= item.id %>" class="btn btn-sm btn-outline-danger ms-1" onclick="return confirm('Yakin ingin menghapus materi ini?')">Hapus</a>
                                             </td>
                                         </tr>
+
+                                        <div class="modal fade" id="editModal<%= item.id %>" tabindex="-1">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content">
+                                                    <form action="/edit/<%= item.id %>" method="POST">
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title fw-bold text-warning">✏️ Edit Materi</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Judul Materi</label>
+                                                                <input type="text" name="judul" class="form-control" value="<%= item.judul %>" required>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-bold">Tipe Dokumen</label>
+                                                                <select name="tipe" class="form-select" required>
+                                                                    <option value="materi_belajar" <%= item.tipe === 'materi_belajar' ? 'selected' : '' %>>📚 Bahan Materi Belajar</option>
+                                                                    <option value="tugas" <%= item.tipe === 'tugas' ? 'selected' : '' %>>📝 Tugas Mahasiswa</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="submit" class="btn btn-warning fw-bold">Simpan Perubahan</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+
                                     <% }) %>
                                 <% } else { %>
                                     <tr>
@@ -92,40 +122,27 @@
             const form = document.getElementById('uploadForm');
             if(form.checkValidity()) {
                 Swal.fire({
-                    title: 'Mengunggah ke AWS S3...',
-                    html: 'Mohon tunggu sebentar ya.',
+                    title: 'Mengunggah...',
+                    html: 'Mohon tunggu sebentar.',
                     allowOutsideClick: false,
-                    didOpen: () => {
-                        Swal.showLoading()
-                    }
+                    didOpen: () => { Swal.showLoading() }
                 });
             }
         }
 
         const urlParams = new URLSearchParams(window.location.search);
         
-        // Notifikasi Sukses Upload
         if(urlParams.get('status') === 'success') {
-            Swal.fire({
-                icon: 'success',
-                title: 'BUM! Berhasil!',
-                text: 'Materi sukses tersimpan di AWS RDS dan S3!',
-                confirmButtonColor: '#0d6efd'
-            }).then(() => {
-                window.history.replaceState(null, null, window.location.pathname);
-            });
+            Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Materi sukses tersimpan.', confirmButtonColor: '#0d6efd' })
+            .then(() => { window.history.replaceState(null, null, window.location.pathname); });
         }
-
-        // Notifikasi Sukses Hapus
         if(urlParams.get('status') === 'deleted') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Terhapus!',
-                text: 'Data materi berhasil dihapus dari sistem.',
-                confirmButtonColor: '#dc3545'
-            }).then(() => {
-                window.history.replaceState(null, null, window.location.pathname);
-            });
+            Swal.fire({ icon: 'success', title: 'Terhapus!', text: 'Materi berhasil dihapus.', confirmButtonColor: '#dc3545' })
+            .then(() => { window.history.replaceState(null, null, window.location.pathname); });
+        }
+        if(urlParams.get('status') === 'updated') {
+            Swal.fire({ icon: 'success', title: 'Diperbarui!', text: 'Materi berhasil diedit.', confirmButtonColor: '#ffc107' })
+            .then(() => { window.history.replaceState(null, null, window.location.pathname); });
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
