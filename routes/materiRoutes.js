@@ -5,7 +5,7 @@ const uploadS3 = require('../config/s3');
 const db = require('../config/db'); 
 
 // ==========================================
-// 1. READ: Menampilkan Portal Dosen (Halaman Utama)
+// [READ] 1. Menampilkan Portal Dosen (Halaman Utama)
 // ==========================================
 router.get('/', (req, res) => {
     const query = 'SELECT * FROM materi_tugas ORDER BY id DESC';
@@ -19,7 +19,7 @@ router.get('/', (req, res) => {
 });
 
 // ==========================================
-// 2. READ: Menampilkan Portal Mahasiswa
+// [READ] 2. Menampilkan Portal Mahasiswa
 // ==========================================
 router.get('/mahasiswa', (req, res) => {
     const query = 'SELECT * FROM materi_tugas ORDER BY id DESC';
@@ -33,7 +33,7 @@ router.get('/mahasiswa', (req, res) => {
 });
 
 // ==========================================
-// 3. CREATE: Upload File ke S3 & Simpan ke DB
+// [CREATE] 3. Upload Materi/Tugas (Khusus Dosen)
 // ==========================================
 router.post('/upload', uploadS3.single('file'), (req, res) => {
     const { judul, tipe } = req.body;
@@ -50,7 +50,25 @@ router.post('/upload', uploadS3.single('file'), (req, res) => {
 });
 
 // ==========================================
-// 4. UPDATE: Mengedit Judul & Tipe Materi
+// [CREATE] 4. Kumpul Tugas (Khusus Mahasiswa)
+// ==========================================
+router.post('/upload-mahasiswa', uploadS3.single('file'), (req, res) => {
+    const { judul } = req.body;
+    const tipe = 'kumpul_tugas'; // Tipe di-set otomatis
+    const file_url = req.file.location; 
+
+    const query = 'INSERT INTO materi_tugas (judul, tipe, file_dokumen) VALUES (?, ?, ?)';
+    db.query(query, [judul, tipe, file_url], (err, results) => {
+        if (err) {
+            console.error("Gagal menyimpan ke RDS:", err);
+            return res.status(500).send("Gagal menyimpan ke database");
+        }
+        res.redirect('/mahasiswa?status=success'); // Kembali ke halaman mahasiswa
+    });
+});
+
+// ==========================================
+// [UPDATE] 5. Mengedit Materi (Khusus Dosen)
 // ==========================================
 router.post('/edit/:id', (req, res) => {
     const idMateri = req.params.id;
@@ -67,7 +85,7 @@ router.post('/edit/:id', (req, res) => {
 });
 
 // ==========================================
-// 5. DELETE: Menghapus Materi dari Database
+// [DELETE] 6. Menghapus Materi (Khusus Dosen)
 // ==========================================
 router.get('/delete/:id', (req, res) => {
     const idMateri = req.params.id;
