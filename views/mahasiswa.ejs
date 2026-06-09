@@ -3,120 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Mahasiswa | E-Learning UPR</title>
+    <title>E-Learning UPR | Portal Mahasiswa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <style>
-        body { background-color: #f4f7f6; }
-        .card { border: none; border-radius: 15px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
-        .navbar-brand { font-weight: bold; color: #198754 !important; }
-    </style>
+    <style> body { background-color: #f4f7f6; font-family: 'Segoe UI', sans-serif; } </style>
 </head>
 <body>
 
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
+    <nav class="navbar navbar-dark bg-dark shadow-sm mb-4">
         <div class="container">
-            <a class="navbar-brand" href="#">🎓 E-Learning Kelompok 5</a>
-            <span class="navbar-text text-success fw-bold">Login sebagai: Mahasiswa</span>
+            <a class="navbar-brand fw-bold" href="/mahasiswa"><i class="bi bi-cloud-check-fill text-primary me-2"></i>E-Learning Kelompok 5</a>
+            <span class="badge bg-primary px-3 py-2 rounded-pill"><i class="bi bi-mortarboard-fill me-1"></i> Mode Mahasiswa</span>
         </div>
     </nav>
 
     <div class="container">
-        <div class="alert alert-success shadow-sm mb-4" role="alert">
-            <h4 class="alert-heading fw-bold">👋 Selamat Datang, Mahasiswa!</h4>
-            <p class="mb-0">Silakan unduh materi dari dosen di tabel kanan, dan gunakan form di sebelah kiri untuk mengumpulkan tugas praktikum Anda.</p>
+        <div class="alert alert-success shadow-sm rounded-3 mb-4 border-0" role="alert">
+            <h5 class="alert-heading fw-bold"><i class="bi bi-check-circle-fill me-2"></i>Selamat Datang, Mahasiswa!</h5>
+            <p class="mb-0 small">Silakan unduh materi dari dosen di tabel kanan, dan kumpulkan tugasmu melalui form di sebelah kiri.</p>
         </div>
 
-        <div class="row">
-            <div class="col-md-4 mb-4">
-                <div class="card p-4 border-success border-top border-4">
-                    <h5 class="mb-3 text-success">📤 Kumpulkan Tugas</h5>
-                    <form action="/upload-mahasiswa" method="POST" enctype="multipart/form-data" id="uploadForm">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold">Nama / NIM - Judul Tugas</label>
-                            <input type="text" name="judul" class="form-control" placeholder="Contoh: Tyara - Tugas Cloud 1" required>
-                        </div>
-                        <div class="mb-4">
-                            <label class="form-label fw-bold">Pilih File Tugas Anda</label>
-                            <input type="file" name="file" class="form-control" required>
-                            <small class="text-muted">Format yang diizinkan: PDF, Word, ZIP</small>
-                        </div>
-                        <button type="submit" class="btn btn-success w-100 fw-bold" onclick="showLoading()">🚀 Kirim Tugas ke Dosen</button>
-                    </form>
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm rounded-4 p-3">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-journal-arrow-up text-primary me-2"></i>Kumpulkan Tugas</h5>
+                        <form action="/mahasiswa/upload" method="POST" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-muted">Nama / Judul Tugas</label>
+                                <input type="text" name="judul" class="form-control rounded-3" placeholder="Misal: Tyara - Tugas 1" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label small fw-semibold text-muted">Pilih File Tugas</label>
+                                <input type="file" name="file" class="form-control rounded-3" required>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100 rounded-3 py-2 fw-bold shadow-sm">Kirim Tugas</button>
+                        </form>
+                    </div>
                 </div>
             </div>
 
-            <div class="col-md-8">
-                <div class="card p-4">
-                    <h5 class="mb-3 text-success">📂 Daftar Materi & File Sistem</h5>
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped align-middle">
-                            <thead class="table-dark">
-                                <tr>
-                                    <th>No</th>
-                                    <th>Judul File</th>
-                                    <th>Kategori</th>
-                                    <th>Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <% if (materi && materi.length > 0) { %>
-                                    <% materi.forEach((item, index) => { %>
-                                        <tr>
-                                            <td><%= index + 1 %></td>
-                                            <td class="fw-bold"><%= item.judul %></td>
-                                            <td>
-                                                <% if(item.tipe === 'materi_belajar') { %>
-                                                    <span class="badge bg-primary">Materi Dosen</span>
-                                                <% } else if(item.tipe === 'tugas') { %>
-                                                    <span class="badge bg-danger">Soal Tugas</span>
-                                                <% } else { %>
-                                                    <span class="badge bg-success">Tugas Terkumpul</span>
-                                                <% } %>
-                                            </td>
-                                            <td>
-                                                <a href="<%= item.file_dokumen %>" target="_blank" class="btn btn-sm btn-outline-success">⬇️ Unduh</a>
-                                            </td>
-                                        </tr>
-                                    <% }) %>
-                                <% } else { %>
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm rounded-4 p-3">
+                    <div class="card-body">
+                        <h5 class="fw-bold mb-4 text-dark"><i class="bi bi-folder-fill text-warning me-2"></i>Daftar Materi & Tugas Terkumpul</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead class="table-light">
                                     <tr>
-                                        <td colspan="4" class="text-center text-muted">Belum ada data di dalam sistem.</td>
+                                        <th>No</th>
+                                        <th>Judul File</th>
+                                        <th>Kategori</th>
+                                        <th class="text-center">Aksi</th>
                                     </tr>
-                                <% } %>
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    <% if (typeof materi !== 'undefined' && materi.length > 0) { %>
+                                        <% materi.forEach((item, index) => { %>
+                                            <tr>
+                                                <td><%= index + 1 %></td>
+                                                <td class="fw-semibold"><%= item.judul || item.nama %></td>
+                                                <td>
+                                                    <% if (item.kategori === 'Materi Dosen' || item.kategori === 'Materi') { %>
+                                                        <span class="badge bg-info text-dark">Materi Dosen</span>
+                                                    <% } else if (item.kategori === 'Soal Tugas') { %>
+                                                        <span class="badge bg-danger">Soal Tugas</span>
+                                                    <% } else { %>
+                                                        <span class="badge bg-success">Tugas Terkumpul</span>
+                                                    <% } %>
+                                                </td>
+                                                <td class="text-center">
+                                                    <a href="<%= item.file_url || item.url %>" class="btn btn-sm btn-outline-primary rounded-pill px-3" target="_blank">
+                                                        <i class="bi bi-download me-1"></i>Unduh
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        <% }) %>
+                                    <% } else { %>
+                                        <tr>
+                                            <td colspan="4" class="text-center text-muted py-4">Belum ada file di server.</td>
+                                        </tr>
+                                    <% } %>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script>
-        function showLoading() {
-            const form = document.getElementById('uploadForm');
-            if(form.checkValidity()) {
-                Swal.fire({
-                    title: 'Mengirim Tugas...',
-                    html: 'Sedang mengunggah file ke AWS S3.',
-                    allowOutsideClick: false,
-                    didOpen: () => { Swal.showLoading() }
-                });
-            }
-        }
-
-        const urlParams = new URLSearchParams(window.location.search);
-        if(urlParams.get('status') === 'success') {
-            Swal.fire({
-                icon: 'success',
-                title: 'Tugas Terkirim!',
-                text: 'Tugas Anda berhasil diunggah ke sistem.',
-                confirmButtonColor: '#198754'
-            }).then(() => {
-                window.history.replaceState(null, null, window.location.pathname);
-            });
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
