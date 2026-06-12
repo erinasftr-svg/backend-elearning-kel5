@@ -1,19 +1,15 @@
 const express = require('express');
 const router = express.Router();
-// Memanggil pengaturan S3 dan Database
-const uploadS3 = require('../config/s3'); 
-const db = require('../config/db'); 
+
+const uploadS3 = require('../config/s3');
+const db = require('../config/db');
 
 // ==========================================
-// [READ] 1. Menampilkan Portal Dosen (Halaman Utama)
+// [READ] 1. Menampilkan Portal Dosen
 // ==========================================
 router.get('/', (req, res) => {
-    const query = 'SELECT * FROM materi_tugas ORDER BY id DESC';
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error("Gagal mengambil data dari RDS:", err);
-            return res.status(500).send("Error Database RDS");
-        }
+    db.query('SELECT * FROM materi_tugas ORDER BY id DESC', (err, results) => {
+        if (err) return res.status(500).send("Error Database RDS");
         res.render('index', { materi: results });
     });
 });
@@ -22,12 +18,8 @@ router.get('/', (req, res) => {
 // [READ] 2. Menampilkan Portal Mahasiswa
 // ==========================================
 router.get('/mahasiswa', (req, res) => {
-    const query = 'SELECT * FROM materi_tugas ORDER BY id DESC';
-    db.query(query, (err, results) => {
-        if (err) {
-            console.error("Gagal mengambil data dari RDS:", err);
-            return res.status(500).send("Error Database RDS");
-        }
+    db.query('SELECT * FROM materi_tugas ORDER BY id DESC', (err, results) => {
+        if (err) return res.status(500).send("Error Database RDS");
         res.render('mahasiswa', { materi: results });
     });
 });
@@ -36,15 +28,14 @@ router.get('/mahasiswa', (req, res) => {
 // [CREATE] 3. Upload Materi/Tugas (Khusus Dosen)
 // ==========================================
 router.post('/upload', uploadS3.single('file'), (req, res) => {
-    const { judul, tipe } = req.body;
-    const file_url = req.file.location; 
+    if (!req.file) return res.status(400).send("Gagal: Belum memilih file!");
+    
+    const { judul } = req.body;
+    const tipe = req.body.tipe || req.body.kategori || 'Materi Dosen';
+    const file_url = req.file.location;
 
-    const query = 'INSERT INTO materi_tugas (judul, tipe, file_dokumen) VALUES (?, ?, ?)';
-    db.query(query, [judul, tipe, file_url], (err, results) => {
-        if (err) {
-            console.error("Gagal menyimpan ke RDS:", err);
-            return res.status(500).send("Gagal menyimpan ke database");
-        }
+    db.query('INSERT INTO materi_tugas (judul, tipe, file_dokumen) VALUES (?, ?, ?)', [judul, tipe, file_url], (err) => {
+        if (err) return res.status(500).send("Gagal menyimpan ke RDS");
         res.redirect('/?status=success');
     });
 });
@@ -53,17 +44,15 @@ router.post('/upload', uploadS3.single('file'), (req, res) => {
 // [CREATE] 4. Kumpul Tugas (Khusus Mahasiswa)
 // ==========================================
 router.post('/upload-mahasiswa', uploadS3.single('file'), (req, res) => {
+    if (!req.file) return res.status(400).send("Gagal: Belum memilih file!");
+    
     const { judul } = req.body;
-    const tipe = 'kumpul_tugas'; // Tipe di-set otomatis
-    const file_url = req.file.location; 
+    const tipe = 'kumpul_tugas';
+    const file_url = req.file.location;
 
-    const query = 'INSERT INTO materi_tugas (judul, tipe, file_dokumen) VALUES (?, ?, ?)';
-    db.query(query, [judul, tipe, file_url], (err, results) => {
-        if (err) {
-            console.error("Gagal menyimpan ke RDS:", err);
-            return res.status(500).send("Gagal menyimpan ke database");
-        }
-        res.redirect('/mahasiswa?status=success'); // Kembali ke halaman mahasiswa
+    db.query('INSERT INTO materi_tugas (judul, tipe, file_dokumen) VALUES (?, ?, ?)', [judul, tipe, file_url], (err) => {
+        if (err) return res.status(500).send("Gagal menyimpan ke RDS");
+        res.redirect('/mahasiswa?status=success');
     });
 });
 
@@ -71,32 +60,37 @@ router.post('/upload-mahasiswa', uploadS3.single('file'), (req, res) => {
 // [UPDATE] 5. Mengedit Materi (Khusus Dosen)
 // ==========================================
 router.post('/edit/:id', (req, res) => {
-    const idMateri = req.params.id;
-    const { judul, tipe } = req.body;
+    const { judul } = req.body;
+    const tipe = req.body.tipe || req.body.kategori || 'Materi Dosen';
     
-    const query = 'UPDATE materi_tugas SET judul = ?, tipe = ? WHERE id = ?';
-    db.query(query, [judul, tipe, idMateri], (err, results) => {
-        if (err) {
-            console.error("Gagal mengedit data:", err);
-            return res.status(500).send("Gagal mengedit data");
-        }
+    db.query('UPDATE materi_tugas SET judul = ?, tipe = ? WHERE id = ?', [judul, tipe, req.params.id], (err) => {
+        if (err) return res.status(500).send("Gagal mengedit data");
         res.redirect('/?status=updated');
     });
 });
 
 // ==========================================
-// [DELETE] 6. Menghapus Materi (Khusus Dosen)
+// [DELETE] 6. Menghapus Materi 
 // ==========================================
-router.get('/delete/:id', (req, res) => {
-    const idMateri = req.params.id;
-    
-    const query = 'DELETE FROM materi_tugas WHERE id = ?';
-    db.query(query, [idMateri], (err, results) => {
-        if (err) {
-            console.error("Gagal menghapus data:", err);
-            return res.status(500).send("Gagal menghapus data");
-        }
+// Menggunakan .all agar tombol POST atau GET dari HTML tetap jalan
+router.all('/delete/:id', (req, res) => {
+    db.query('DELETE FROM materi_tugas WHERE id = ?', [req.params.id], (err) => {
+        if (err) return res.status(500).send("Gagal menghapus data");
         res.redirect('/?status=deleted');
+    });
+});
+
+// ==========================================
+// [DOWNLOAD] 7. Mengunduh Materi 
+// ==========================================
+// Menggunakan .all agar tombol HTML bentuk apapun tetap diterima Node.js
+router.all('/download/:id', (req, res) => {
+    db.query('SELECT file_dokumen FROM materi_tugas WHERE id = ?', [req.params.id], (err, results) => {
+        if (err || results.length === 0) {
+            return res.status(404).send("File tidak ditemukan di database!");
+        }
+        // Perintah ini yang akan memaksa browser mengunduh dari AWS S3
+        res.redirect(results[0].file_dokumen);
     });
 });
 

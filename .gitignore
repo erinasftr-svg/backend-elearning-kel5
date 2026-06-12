@@ -1,3 +1,5 @@
 node_modules/
 .env
-uploads/
+*.pem
+terraform.tfvars
+.terraform/
